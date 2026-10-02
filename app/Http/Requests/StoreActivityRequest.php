@@ -2,42 +2,37 @@
 // app/Http/Requests/StoreActivityRequest.php
 namespace App\Http\Requests;
 
+// rules() disini sengaja dipisah dari UpdateActivityRequest supaya nanti bisa dikembangkan sendiri-sendiri
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-
-// rules() disini sengaja dipisah dari UpdateActivityRequest supaya nanti bisa dikembangkan sendiri-sendiri
 class StoreActivityRequest extends FormRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
+    public function authorize(): bool { return true; }
 
     public function rules(): array
     {
         return [
-            'title' => ['required', 'string', 'min:5', 'max:100'],
-            'description' => ['nullable', 'string', 'max:1000'],
-            'activity_date' => ['required', 'date'],
-            'category' => ['required', 'string', 'max:50'],
-            'status' => [
-                'required',
-                Rule::in(['Planned', 'Ongoing', 'Done']),
-            ],
+            'category_id'  => ['required', 'exists:categories,id'],
+            'code'         => ['required', 'string', 'max:30', 'unique:activities,code'],
+            'title'        => ['required', 'string', 'min:5', 'max:150'],
+            'description'  => ['nullable', 'string', 'max:1000'],
+            'location'     => ['nullable', 'string', 'max:150'],
+            'capacity'     => ['required', 'integer', 'min:1', 'max:500'],
+            'start_at'     => ['required', 'date'],
+            'end_at'       => ['required', 'date', 'after_or_equal:start_at'],
+            'status'       => ['required', Rule::in(['draft', 'published', 'completed'])],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'title.min' => 'Judul kegiatan minimal 5 karakter.',
-            'title.max' => 'Judul kegiatan maksimal 100 karakter.',
-            'title.required' => 'Judul kegiatan wajib diisi.',
-            'activity_date.required' => 'Tanggal kegiatan wajib diisi.',
-            'activity_date.date' => 'Tanggal kegiatan harus berupa tanggal yang valid.',
-            'status.in' => 'Status hanya boleh berisi Planned, Ongoing, atau Done.',
-            'category.required' => 'Kategori wajib diisi.',
+            'category_id.exists' => 'Kategori tidak ditemukan.',
+            'code.unique'        => 'Kode kegiatan sudah dipakai.',
+            'title.min'          => 'Judul minimal 5 karakter.',
+            'end_at.after_or_equal' => 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.',
+            'capacity.max'       => 'Kapasitas maksimal 500 peserta.',
         ];
     }
 }
